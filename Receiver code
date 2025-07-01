@@ -1,0 +1,43 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+ 
+#define CE_PIN 2
+#define CSN_PIN 4
+#define LED_PIN 15
+ 
+RF24 radio(CE_PIN, CSN_PIN);
+const byte address[6] = "00001";
+ 
+void setup() {
+  Serial.begin(115200);
+ 
+  // Initialize NRF24L01
+  if (!radio.begin()) {
+    Serial.println("NRF24L01 initialization failed!");
+    while (1);
+  }
+  radio.openReadingPipe(1, address);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.startListening();
+  Serial.println("Receiver ready.");
+ 
+  // Initialize LED
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+}
+ 
+void loop() {
+  if (radio.available()) {
+    char receivedMessage[32] = "";
+    radio.read(&receivedMessage, sizeof(receivedMessage));
+ 
+    Serial.print("Received: ");
+    Serial.println(receivedMessage);
+ 
+    // Turn on LED while data is received
+    digitalWrite(LED_PIN, HIGH);
+    delay(1000); // Keep LED on for 1 second after each message
+    digitalWrite(LED_PIN, LOW);
+  }
+}
